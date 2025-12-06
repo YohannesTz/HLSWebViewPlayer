@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HLS Player</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: black;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+<video id="video" playsinline autoplay muted></video>
+<script>
+    const video = document.getElementById('video');
+    let hls = new Hls({
+        debug: true,
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90
+    });
+    let currentStreamUrl = null;
+
+    function log(level, message) {
+        if (window.AndroidInterface && window.AndroidInterface.log) {
+            window.AndroidInterface.log(level, message);
+        } else {
+            console.log(`${level}: ${message}`);
+        }
+    }
+
+    function onStatusChanged(status, message = '') {
+        if (window.AndroidInterface && window.AndroidInterface.onStatusChanged) {
+            window.AndroidInterface.onStatusChanged(status, message);
+        } else {
+            console.log(`Status: ${status}, Message: ${message}`);
+        }
+    }
+
+    function playStream(url) {
+        log('DEBUG', `playStream called with URL: ${url}`);
+        if (!url) {
+            log('ERROR', 'playStream: URL is null or empty');
+            onStatusChanged('ERROR', 'URL is null or empty');
+            return;
+        }
+
+        if (hls) {
+            hls.destroy();
+        }
+
+        hls = new Hls({
+            debug: true,
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 90
+        });
+
+        hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+            log('DEBUG', 'video and hls.js are now bound together !');
+            hls.loadSource(url);
+        });
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+            log('DEBUG', 'manifest loaded, found ' + data.levels.length + ' quality level');
+            onStatusChanged('LOADING', 'Manifest parsed');
+            video.play().catch(error => {
+                log('WARN', 'Autoplay was prevented: ' + error.message);
+                // On some modern browsers, autoplay with sound is blocked.
+                // Muting and then playing can be a workaround.
+                video.muted = true;
+                video.play();
+            });
+        });
+
+        hls.on(Hls.Events.ERROR, function(event, data) {
+            if (data.fatal) {
+                log('ERROR', 'Fatal HLS error: ' + data.type + ' - ' + data.details);
+                onStatusChanged('ERROR', data.details);
+                switch(data.type) {
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        log('ERROR', 'fatal network error encountered, try to recover');
+                        hls.startLoad();
+                        break;
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        log('ERROR', 'fatal media error encountered, try to recover');
+                        hls.recoverMediaError();
+                        break;
+                    default:
+                        log('ERROR', 'cannot recover');
+                        hls.destroy();
+                        break;
+                }
+            } else {
+                log('WARN', 'Non-fatal HLS error: ' + data.type + ' - ' + data.details);
+            }
+        });
+
+        video.addEventListener('playing', () => { onStatusChanged('PLAYING'); });
+        video.addEventListener('pause', () => { onStatusChanged('PAUSED'); });
+        video.addEventListener('ended', () => { onStatusChanged('ENDED'); });
+        video.addEventListener('waiting', () => { onStatusChanged('BUFFERING'); });
+        video.addEventListener('stalled', () => { onStatusChanged('BUFFERING', 'Stalled'); });
+
+        hls.attachMedia(video);
+        currentStreamUrl = url;
+    }
+
+    function stopStream() {
+        log('DEBUG', 'stopStream called');
+        if (hls) {
+            hls.stopLoad();
+            hls.destroy();
+        }
+        video.src = "";
+        video.removeAttribute('src');
+        video.load();
+        onStatusChanged('STOPPED');
+        currentStreamUrl = null;
+    }
+
+    function pauseStream() {
+        log('DEBUG', 'pauseStream called');
+        if (!video.paused) {
+            video.pause();
+        }
+    }
+
+    function resumeStream() {
+        log('DEBUG', 'resumeStream called');
+        if (video.paused) {
+            video.play().catch(error => {
+                log('WARN', 'Resume play was prevented: ' + error.message);
+            });
+        }
+    }
+
+    function setVolume(volume) {
+        log('DEBUG', `setVolume called with volume: ${volume}`);
+        video.volume = parseFloat(volume);
+    }
+
+    function setMuted(muted) {
+        log('DEBUG', `setMuted called with muted: ${muted}`);
+        video.muted = muted;
+    }
+
+    onStatusChanged('READY', 'Player is ready');
+</script>
+</body>
+</html>
