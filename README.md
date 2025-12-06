@@ -1,3 +1,4 @@
+[![JitPack](https://jitpack.io/v/yohannestz/HLSWebViewPlayer.svg)](https://jitpack.io/#yohannestz/HLSWebViewPlayer)
 # HLS WebView Player
 
 HLSWebViewPlayer is a lightweight Android library for playing HLS streams using a `WebView`. It leverages the robustness of `hls.js` to provide a reliable playback experience, avoiding many of the pitfalls and inconsistencies of native Android media players.
@@ -14,11 +15,29 @@ The library offers a simple player view for both traditional XML layouts (`HlsPl
 
 ## Setup
 
-To use this library, you would typically add it as a dependency to your `build.gradle.kts` or `build.gradle` file. (Note: This example assumes local module dependency. For remote dependency, you would use a repository like JitPack).
+### Add the JitPack repository
+
+In your project's root `build.gradle.kts` file:
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") } // Add this line
+    }
+}
+```
+
+### Add the dependency
+
+In your app module's `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-    implementation(project(":HLSWebViewPlayer"))
+    implementation("com.github.yohannestz:HLSWebViewPlayer:1.0.0")
 }
 ```
 
@@ -141,3 +160,10 @@ class MainActivity : AppCompatActivity() {
 ---
 
 That's it! You now have a reliable HLS player integrated into your Android application.
+
+## Screenshots
+
+| Home | XML Sample | Jetpack Compose Sample |
+| :---: | :---: | :---: |
+| <img src="screenshots/home.png" alt="Home Screen" width="250"/> | <img src="screenshots/xml_sample.png" alt="XML Sample Screen" width="250"/> | <img src="screenshots/jetpack_compose_sample.png" alt="Jetpack Compose Sample Screen" width="250"/> |
+
