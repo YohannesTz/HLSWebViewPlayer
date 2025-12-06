@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HLSWebViewPlayer</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fafafa;
+            line-height: 1.6;
+        }
+        header {
+            background: #20232a;
+            padding: 1.3rem 2rem;
+            color: white;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        h2 {
+            color: #333;
+            border-left: 4px solid #0070f3;
+            padding-left: 10px;
+        }
+        pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 1rem;
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+        code {
+            font-family: Consolas, monospace;
+        }
+        a {
+            color: #0070f3;
+        }
+        .badge {
+            margin: 1rem 0;
+        }
+        .screenshots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .screenshots img {
+            width: 260px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>HLS WebView Player Documentation</h1>
+</header>
+
+<main>
+    <div class="badge">
+        <a href="https://jitpack.io/#yohannestz/HLSWebViewPlayer">
+            <img src="https://jitpack.io/v/yohannestz/HLSWebViewPlayer.svg" alt="JitPack Badge" />
+        </a>
+    </div>
+
+    <p>
+        <strong>HLSWebViewPlayer</strong> is a lightweight Android library for streaming HLS video using a WebView and
+        <code>hls.js</code>. It provides a highly stable playback experience across Android versions, avoiding native
+        media player inconsistencies while offering a clean control API and Jetpack Compose support.
+    </p>
+
+    <h2>Features</h2>
+    <ul>
+        <li><strong>Reliable HLS Playback</strong> powered by <code>hls.js</code></li>
+        <li><strong>Simple Player Controller</strong> for play, pause, stop, volume, and mute</li>
+        <li><strong>Reactive StateFlow</strong> updates for play and load status</li>
+        <li>Support for both <strong>XML views</strong> and <strong>Jetpack Compose</strong></li>
+        <li>Lightweight, minimal overhead</li>
+    </ul>
+
+    <h2>Setup</h2>
+
+    <h3>1. Add JitPack Repository</h3>
+    <pre><code>// settings.gradle.kts
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") } // Add this
+    }
+}
+    </code></pre>
+
+    <h3>2. Add Dependency</h3>
+    <pre><code>// build.gradle.kts (app module)
+dependencies {
+    implementation("com.github.yohannestz:HLSWebViewPlayer:1.0.0")
+}
+    </code></pre>
+
+    <h3>3. Permissions</h3>
+    <pre><code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+    </code></pre>
+
+    <h2>Usage</h2>
+
+    <h3>Jetpack Compose</h3>
+
+    <h4>Step 1: Create Controller</h4>
+    <pre><code>val controller = remember { DefaultHlsPlayerController() }</code></pre>
+
+    <h4>Step 2: Add Player Composable</h4>
+    <pre><code>HlsWebViewPlayer(
+    modifier = Modifier.aspectRatio(16 / 9f),
+    controller = controller
+)</code></pre>
+
+    <h4>Step 3: Control Playback</h4>
+    <pre><code>val playStatus by controller.playStatus.collectAsState()
+
+Button(onClick = {
+    if (playStatus == PlayStatus.PLAY) {
+        controller.pause()
+    } else {
+        controller.play("https://your-stream-url.m3u8")
+    }
+}) {
+    Text(if (playStatus == PlayStatus.PLAY) "Pause" else "Play")
+}</code></pre>
+
+    <h2>XML Layouts</h2>
+
+    <h3>Step 1: Add Player View</h3>
+    <pre><code>&lt;com.github.yohannestz.hlswebviewplayer.HlsPlayerView
+    android:id="@+id/hlsPlayerView"
+    android:layout_width="match_parent"
+    android:layout_height="250dp" /&gt;
+    </code></pre>
+
+    <h3>Step 2: Use Controller in Activity</h3>
+    <pre><code>val playerView = findViewById<HlsPlayerView>(R.id.hlsPlayerView)
+val controller = playerView.controller
+
+controller.playStatus.onEach { status ->
+    // Update your UI
+}.launchIn(lifecycleScope)
+
+controller.play("https://your-stream-url.m3u8")</code></pre>
+
+    <h2>Screenshots</h2>
+
+    <div class="screenshots">
+        <img src="https://raw.githubusercontent.com/YohannesTz/HLSWebViewPlayer/main/screenshots/home.png" alt="Home Screen" />
+        <img src="https://raw.githubusercontent.com/YohannesTz/HLSWebViewPlayer/main/screenshots/xml_sample.png" alt="XML Sample Screen" />
+        <img src="https://raw.githubusercontent.com/YohannesTz/HLSWebViewPlayer/main/screenshots/jetpack_compose_sample.png" alt="Compose Sample Screen" />
+    </div>
+
+    <br /><br />
+    <p>
+        For source code and contributions, visit the GitHub repository:
+        <a href="https://github.com/yohannestz/HLSWebViewPlayer">https://github.com/yohannestz/HLSWebViewPlayer</a>
+    </p>
+</main>
+
+</body>
+</html>
